@@ -59,7 +59,7 @@ census_data$PCT_elderly <- census_data$`v_CA21_251: 65 years and over`/census_da
 census_data$PCT_married <- census_data$`v_CA21_456: Married or living common-law`/census_data$`v_CA21_453: Marital status for the total population aged 15 years and over`*100
 ```
 
-Created using 2021 Census data from Statistics Canada, and *R* packages `mapgl` and `cancensus`.
+Created using 2021 Census data from Statistics Canada, and *R* packages `mapgl`, `flexdashboard`, and `cancensus`.
 
 Column {.tabset}
 -------------------------------------
@@ -189,7 +189,7 @@ map4 |>
   fill_opacity = 0.5
  ) |> 
   add_legend(
-    "Percenage of Population Change<br>from 2016 to 2021 in Hamilton",
+    "Percenage of Population<br>Change from 2016 to 2021<br>in Hamilton",
     values = c(
       "Under -60%",
       "-60~-10%",
@@ -224,7 +224,7 @@ map5 |>
   fill_opacity = 0.5
  ) |> 
   add_legend(
-    "Percentage of Residents Married<br>or Living Common-law in Hamilton",
+    "Percentage of Residents<br>Married or Living<br>Common-law in Hamilton",
     values = c(
       "Under 35%",
       "35-45%",
@@ -258,8 +258,8 @@ map6 |>
   fill_opacity = 0.5
  ) |> 
   add_legend(
-    "Median Total Income of Hamilton Household in 2020 ($)",
-    values = c(30000, 160000),
+    "Median Total Income of Hamilton Household in 2020 ($ in Square Root)",
+    values = c(180, 400),
     colors = c("#ece7f2", "darkblue")
   )
 ```
@@ -285,7 +285,7 @@ map7 |>
   fill_opacity = 0.5
  ) |> 
   add_legend(
-    "Prevalence of low income based on the Low-income<br>cut-offs in Hamilton",
+    "Prevalence of Low Income<br>Hamilton Residents based on<br>the Low-income Cut-offs",
     values = c(
       "Under 3%",
       "3-6%",
