@@ -59,7 +59,7 @@ census_data$PCT_elderly <- census_data$`v_CA21_251: 65 years and over`/census_da
 census_data$PCT_married <- census_data$`v_CA21_456: Married or living common-law`/census_data$`v_CA21_453: Marital status for the total population aged 15 years and over`*100
 ```
 
-Created using 2021 Census data from Statistics Canada, and R packages `mapgl` and `cancensus`.
+Created using 2021 Census data from Statistics Canada, and *R* packages `mapgl` and `cancensus`.
 
 Column {.tabset}
 -------------------------------------
@@ -240,6 +240,8 @@ map5 |>
 ### Median Houshold Income
 
 ```{r}
+census_data$sqrt_income <- sqrt(census_data$`v_CA21_906: Median total income of household in 2020 ($)`)
+
 map6 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
                  zoom = 10) 
 
@@ -248,9 +250,9 @@ map6 |>
   id = "ht_tracts",
   source = census_data,
   fill_color = interpolate(
-    column = "v_CA21_906: Median total income of household in 2020 ($)",
-    values = c(30000, 160000),
-    stops = c("lightblue", "darkblue"),
+    column = "sqrt_income",
+    values = c(180, 400),
+    stops = c("#ece7f2", "darkblue"),
     na_color = "lightgrey"
   ),
   fill_opacity = 0.5
@@ -258,7 +260,7 @@ map6 |>
   add_legend(
     "Median Total Income of Hamilton Household in 2020 ($)",
     values = c(30000, 160000),
-    colors = c("lightblue", "darkblue")
+    colors = c("#ece7f2", "darkblue")
   )
 ```
 
