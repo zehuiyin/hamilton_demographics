@@ -91,7 +91,7 @@ map1 |>
   )
  ) |> 
   add_legend(
-    "Population Density (Population per Sqaure Kilometre in Hamilton)",
+    "Population Density (per Sqaure Kilometre) in Hamilton",
     values = c(20, 16000),
     colors = c("lightblue", "darkblue")
   )
