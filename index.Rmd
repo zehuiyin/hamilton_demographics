@@ -1,0 +1,133 @@
+---
+title: "Web Maps of Some Hamilton Demographics"
+author: "Zehui Yin"
+output: html_document
+---
+
+```{r echo=FALSE}
+knitr::opts_chunk$set(
+  echo = F,
+  message = F
+)
+```
+
+```{r}
+library(sf)
+library(mapgl)
+library(cancensus)
+readRenviron(".Renviron")
+options(cancensus.api_key = Sys.getenv("API_key"))
+options(cancensus.cache_path = "./census_data")
+```
+
+```{r}
+# Returns data and geography as an sf-class data frame
+census_data <- get_census(
+  # 2021 census
+  dataset = "CA21", 
+  # CSD Hamilton
+  regions = list(CSD="3525005"),
+  vectors = c(
+    # population count
+    "v_CA21_1",
+    # ages
+    "v_CA21_10","v_CA21_8","v_CA21_251"
+              ), 
+  labels = "detailed", 
+  geo_format = "sf",
+  # at Census Tract level
+  level = "CT")
+
+census_data$pop_per_sq_km <- census_data$`v_CA21_1: Population, 2021`/census_data$`Area (sq km)`
+census_data$PCT_female <- census_data$`v_CA21_10: Total - Age`/census_data$`v_CA21_8: Total - Age`
+census_data$PCT_elderly <- census_data$`v_CA21_251: 65 years and over`/census_data$`v_CA21_8: Total - Age`
+```
+
+Created using 2021 Census data from statistics Canada, and R packages `mapgl` and `cancensus`.
+
+```{r}
+map1 <- mapboxgl(mapbox_style("light"),
+                bounds = census_data) 
+
+map1 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = interpolate(
+    column = "pop_per_sq_km",
+    values = c(20, 16000),
+    stops = c("lightblue", "darkblue"),
+    na_color = "lightgrey"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Population Density (Population per Sqaure Kilometre in Hamilton)",
+    values = c(20, 16000),
+    colors = c("lightblue", "darkblue")
+  )
+```
+
+```{r}
+map2 <- maplibre(bounds = census_data) 
+
+brewer_pal <- RColorBrewer::brewer.pal(5, "RdYlBu")
+
+map2 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = step_expr(
+    column = "PCT_female",
+    base = brewer_pal[1],
+    stops = brewer_pal[2:5],
+    values = c(0.47, 0.49, 0.51, 0.53),
+    na_color = "white"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Percentage of Female Residents<br>in Hamilton",
+    values = c(
+      "Under 47%",
+      "47-49%",
+      "49-51%",
+      "51-53%",
+      "Above 53%"
+    ),
+    colors = brewer_pal,
+    type = "categorical"
+  )
+```
+
+```{r}
+map3 <- maplibre(bounds = census_data)
+
+brewer_pal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+map3 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = step_expr(
+    column = "PCT_elderly",
+    base = brewer_pal[1],
+    stops = brewer_pal[2:5],
+    values = c(0.1, 0.15, 0.2, 0.3),
+    na_color = "white"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Percentage of Residents Aged<br>above 65 in Hamilton",
+    values = c(
+      "Under 10%",
+      "10-15%",
+      "15-20%",
+      "20-30%",
+      "Above 30%"
+    ),
+    colors = brewer_pal,
+    type = "categorical"
+  )
+```
