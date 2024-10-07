@@ -1,7 +1,13 @@
 ---
-title: "Web Maps of Some Hamilton Demographics"
-author: "Zehui Yin"
-output: html_document
+title: "Web Maps of Hamilton Demographics"
+author: "<span>Created by <u><a href='https://zehuiyin.github.io/' target='_blank' style='color: white;'>Zehui Yin</a></u></span>"
+output:
+  flexdashboard::flex_dashboard:
+    navbar:
+        - { icon: "fa-graduation-cap", href: "https://scholar.google.com/citations?user=IC7pmh0AAAAJ&hl=en", align: right }
+        - { icon: "fa-brands fa-orcid", href: "https://orcid.org/0000-0001-6954-7918", align: right }
+        - { icon: "fa-twitter", href: "https://twitter.com/zehuiyin", align: right}
+        - { icon: "fa-linkedin", href: "https://www.linkedin.com/in/zehuiyin/", align: right}
 ---
 
 ```{r echo=FALSE}
@@ -15,6 +21,7 @@ knitr::opts_chunk$set(
 library(sf)
 library(mapgl)
 library(cancensus)
+library(flexdashboard)
 readRenviron(".Renviron")
 options(cancensus.api_key = Sys.getenv("API_key"))
 options(cancensus.cache_path = "./census_data")
@@ -31,7 +38,15 @@ census_data <- get_census(
     # population count
     "v_CA21_1",
     # ages
-    "v_CA21_10","v_CA21_8","v_CA21_251"
+    "v_CA21_10","v_CA21_8","v_CA21_251",
+    # percentage population change
+    "v_CA21_3",
+    # martial status
+    "v_CA21_456","v_CA21_453",
+    # median houshold income
+    "v_CA21_906",
+    # low income
+    "v_CA21_1085"
               ), 
   labels = "detailed", 
   geo_format = "sf",
@@ -41,25 +56,39 @@ census_data <- get_census(
 census_data$pop_per_sq_km <- census_data$`v_CA21_1: Population, 2021`/census_data$`Area (sq km)`
 census_data$PCT_female <- census_data$`v_CA21_10: Total - Age`/census_data$`v_CA21_8: Total - Age`
 census_data$PCT_elderly <- census_data$`v_CA21_251: 65 years and over`/census_data$`v_CA21_8: Total - Age`
+census_data$PCT_married <- census_data$`v_CA21_456: Married or living common-law`/census_data$`v_CA21_453: Marital status for the total population aged 15 years and over`*100
 ```
 
-Created using 2021 Census data from statistics Canada, and R packages `mapgl` and `cancensus`.
+Created using 2021 Census data from Statistics Canada, and R packages `mapgl` and `cancensus`.
+
+Column {.tabset}
+-------------------------------------
+
+### Population Density
 
 ```{r}
 map1 <- mapboxgl(mapbox_style("light"),
-                bounds = census_data) 
+                 center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10,
+                 pitch = 60) 
 
 map1 |>
-  add_fill_layer(
+  add_fill_extrusion_layer(
   id = "ht_tracts",
   source = census_data,
-  fill_color = interpolate(
+  fill_extrusion_color = interpolate(
     column = "pop_per_sq_km",
     values = c(20, 16000),
     stops = c("lightblue", "darkblue"),
     na_color = "lightgrey"
   ),
-  fill_opacity = 0.5
+  fill_extrusion_height = list(
+      'interpolate',
+      list('linear'),
+      list('get', 'pop_per_sq_km'),
+      20, 1, 
+      16000, 10000
+  )
  ) |> 
   add_legend(
     "Population Density (Population per Sqaure Kilometre in Hamilton)",
@@ -68,8 +97,11 @@ map1 |>
   )
 ```
 
+### Percentage of Female Residents
+
 ```{r}
-map2 <- maplibre(bounds = census_data) 
+map2 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10) 
 
 brewer_pal <- RColorBrewer::brewer.pal(5, "RdYlBu")
 
@@ -100,8 +132,11 @@ map2 |>
   )
 ```
 
+### Percentage of Elderly
+
 ```{r}
-map3 <- maplibre(bounds = census_data)
+map3 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10) 
 
 brewer_pal <- RColorBrewer::brewer.pal(5, "YlGnBu")
 
@@ -126,6 +161,135 @@ map3 |>
       "15-20%",
       "20-30%",
       "Above 30%"
+    ),
+    colors = brewer_pal,
+    type = "categorical"
+  )
+```
+
+### Percenage of Population Change from 2016 to 2021
+
+```{r}
+map4 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10) 
+
+brewer_pal <- RColorBrewer::brewer.pal(5, "RdYlBu")
+
+map4 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = step_expr(
+    column = "v_CA21_3: Population percentage change, 2016 to 2021",
+    base = brewer_pal[1],
+    stops = brewer_pal[2:5],
+    values = c(-60, -10, 10, 60),
+    na_color = "white"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Percenage of Population Change<br>from 2016 to 2021 in Hamilton",
+    values = c(
+      "Under -60%",
+      "-60~-10%",
+      "-10~10%",
+      "10~60%",
+      "Above 60%"
+    ),
+    colors = brewer_pal,
+    type = "categorical"
+  )
+```
+
+### Percentage of Residents Married or Living Common-law
+
+```{r}
+map5 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10) 
+
+brewer_pal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+
+map5 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = step_expr(
+    column = "PCT_married",
+    base = brewer_pal[1],
+    stops = brewer_pal[2:5],
+    values = c(35, 45, 55, 65),
+    na_color = "white"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Percentage of Residents Married<br>or Living Common-law in Hamilton",
+    values = c(
+      "Under 35%",
+      "35-45%",
+      "45-55%",
+      "55-65%",
+      "Above 65%"
+    ),
+    colors = brewer_pal,
+    type = "categorical"
+  )
+```
+
+### Median Houshold Income
+
+```{r}
+map6 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10) 
+
+map6 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = interpolate(
+    column = "v_CA21_906: Median total income of household in 2020 ($)",
+    values = c(30000, 160000),
+    stops = c("lightblue", "darkblue"),
+    na_color = "lightgrey"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Median Total Income of Hamilton Household in 2020 ($)",
+    values = c(30000, 160000),
+    colors = c("lightblue", "darkblue")
+  )
+```
+
+### Percentage of Low Income Residents
+
+```{r}
+map7 <- maplibre(center = c(-79.87801819658043, 43.25586010477169),
+                 zoom = 10) 
+
+brewer_pal <- RColorBrewer::brewer.pal(5, "YlGnBu")
+map7 |>
+  add_fill_layer(
+  id = "ht_tracts",
+  source = census_data,
+  fill_color = step_expr(
+    column = "v_CA21_1085: Prevalence of low income based on the Low-income cut-offs, after tax (LICO-AT) (%)",
+    base = brewer_pal[1],
+    stops = brewer_pal[2:5],
+    values = c(3, 6, 9, 15),
+    na_color = "white"
+  ),
+  fill_opacity = 0.5
+ ) |> 
+  add_legend(
+    "Prevalence of low income based on the Low-income<br>cut-offs in Hamilton",
+    values = c(
+      "Under 3%",
+      "3-6%",
+      "6-9%",
+      "9-15%",
+      "Above 15%"
     ),
     colors = brewer_pal,
     type = "categorical"
