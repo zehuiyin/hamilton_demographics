@@ -67,10 +67,14 @@ Column {.tabset}
 ### Population Density
 
 ```{r}
-map1 <- mapboxgl(mapbox_style("light"),
+map1 <- mapboxgl("mapbox://styles/zehuiyin/cm1zte29p000w01qk550o3zcd",
                  center = c(-79.87801819658043, 43.25586010477169),
                  zoom = 10,
-                 pitch = 60) 
+                 pitch = 60,
+                 maxBounds = list(
+                   list(-80.90499982449437, 42.945291986674185),
+                   list(-78.94551667349432, 43.906019040562384)
+                                 ))
 
 map1 |>
   add_fill_extrusion_layer(
@@ -94,7 +98,7 @@ map1 |>
     "Population Density (per Sqaure Kilometre) in Hamilton",
     values = c(20, 16000),
     colors = c("lightblue", "darkblue")
-  )
+)
 ```
 
 ### Percentage of Female Residents
